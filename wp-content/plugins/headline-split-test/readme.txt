@@ -6,7 +6,7 @@ Requires at least: 3.0.1
 Tested up to: 3.0.1
 Stable tag: trunk
 
-This plug-in allows you to enter an alternate headline for every post on your blog.  The headlines are then randomly alternated on your website until a certain number of "headline views" has been reached.  At that point, a "winning" headline (as determined by the number of people that have clicked on each headline to date) is determined and that headline is shown going forward.
+Headline Split Tester allows you to have two competing headlines for blog posts. They are randomly shown until one headline wins.
 
 == Description ==
 
