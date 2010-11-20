@@ -68,28 +68,33 @@ function addLinkCode($permalink, $post) {
 }
 
 
+function action_save_post($post_id, $post) {
+	global $post;
+	if ($post->post_type != 'revision') {
+		$options = array();
+		$options['alt_headline']    = isset($_POST['alt_headline'])    ? trim($_POST['alt_headline'])    : '';
+		if (!update_post_meta($post->ID, 'headline-split-test', $options)) {
+			add_post_meta($post->ID, 'headline-split-test', $options); 
+		}
+	} 
+}
+
 function meta_box_post() {
 
 	global $post;
-	$options = get_post_meta($post->ID, $this->meta, true);
+	$options = get_post_meta($post->ID, 'headline-split-test', true);
 
 	if (is_array($options)) {
-		$options['enabled']           = isset($options['enabled'])           ?  (bool)$options['enabled']          : false;	 
-		$options['control_script']    = isset($options['control_script'])    ? trim($options['control_script'])    : '';	
-		$options['tracking_script']	  = isset($options['tracking_script'])   ? trim($options['tracking_script'])   : '';
-		$options['conversion_script'] = isset($options['conversion_script']) ? trim($options['conversion_script']) : '';
+		$options['alt_headline']    = isset($options['alt_headline'])    ? trim($options['alt_headline'])    : '';	
 	} else {
-		$options['enabled'] = false;
-		$options['control_script']    = '';		
-		$options['tracking_script']	  = '';	
-		$options['conversion_script'] = '';
+		$options['alt_headline']    = '';		
 	}	
 
 
 ?>
 <table border="0" width="100%">
   <tr>
-    <td><textarea rows="1" cols="40" name="control_script" tabindex="5" id="control_script" style="width: 98%"><?php echo(htmlentities($options['alt_headline'])); ?></textarea>
+    <td><textarea rows="1" cols="40" name="alt_headline" tabindex="5" id="alt_headline" style="width: 98%"><?php echo(htmlentities($options['alt_headline'])); ?></textarea>
     </td>
   </tr>
 </table>
@@ -97,19 +102,6 @@ function meta_box_post() {
 
 }
 
-
-function action_save_post($post_id, $post) {
-	if ($post->post_type != 'revision') {
-		$options = array();
-		$options['enabled']           = isset($_POST['enable_gwo']) && ($_POST['enable_gwo'] == '1');
-		$options['control_script']    = isset($_POST['control_script'])    ? trim($_POST['control_script'])    : '';
-		$options['tracking_script']   = isset($_POST['tracking_script'])   ? trim($_POST['tracking_script'])   : '';
-		$options['conversion_script'] = isset($_POST['conversion_script']) ? trim($_POST['conversion_script']) : '';
-		if (!update_post_meta($post->ID, $this->meta, $options)) {
-			add_post_meta($post->ID, $this->meta, $options); 
-		}
-	} 
-}
 
 
 if (is_admin()) {
