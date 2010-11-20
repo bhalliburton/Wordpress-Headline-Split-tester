@@ -25,14 +25,50 @@ License: GPL2
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-function addHeaderCode() {
-  return "Brent";
+$title_a = "TITLE A";
+$title_b = "TITLE B";
+
+$title_selected = "unset";
+$title_selected_id = "unset";
+
+function setupTitle()
+{
+	global $title_a, $title_b, $title_selected, $title_selected_id;
+	
+	if (array_key_exists('titleid', $_GET)) {
+		$title_selected_id = $_GET['titleid'];
+	
+		if ($title_selected_id == 'a')
+			$title_selected = $title_a;
+		else
+			$title_selected = $title_b;
+	} else {
+		$randval = rand(1, 10);
+		if ($randval > 5) {
+			$title_selected = $title_a;
+			$title_selected_id = 'a';
+		} else {
+			$title_selected = $title_b;
+			$title_selected_id = 'b';
+		}
+	}
 }
 
-function addLinkCode($permalink) {
-  return "$permalink&myawesomevalue=1";
+function addHeaderCode($title, $id) {
+	global $title_selected;
+	setupTitle();
+	
+	return $title_selected. " ($title)[$id]";
 }
 
-add_action('the_title', 'addHeaderCode', 1);
-add_filter('post_link', 'addLinkCode', 1);
+function addLinkCode($permalink, $post) {
+	global $title_selected_id;
+	$id = $post->ID;
+	setupTitle();
+	
+  	return "$permalink&titleid=$title_selected_id&monkeys=$id";
+}
+
+add_filter('the_title', 'addHeaderCode', 1, 2);
+add_filter('post_link', 'addLinkCode', 1, 2);
 ?>
