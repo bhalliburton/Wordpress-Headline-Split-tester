@@ -250,12 +250,17 @@ class HEADST4WP {
         }
 
         $is_alt = $this->get_is_alt($post->ID) == true ? 1 : 0;
-
-        return "$permalink&isalt=$is_alt";
+		$q = '&';
+		if (!strpos($permalink, '?'))
+			$q = '?';
+			
+        return "$permalink$q"."isalt=$is_alt";
     }
 
 
     function get_is_alt($id) {
+		global $wp_query;
+		
         // the first thing we do is check to see if an alternate title
         // is defined -- if not, this doesn't apply to us, so we just
         // bail
@@ -267,10 +272,15 @@ class HEADST4WP {
         // return the value of the isalt get parameter
         // if our caller is asking for the title
         // of the current page
-        if (array_key_exists('isalt', $_GET)) {
+		/*echo '<pre>';
+		var_dump($wp_query);
+		echo '</pre>';*/
+        if (isset($_GET['isalt'])) {
             $is_alt = $_GET['isalt'] != 0 ? true : false;
 
-            if ($id == $_GET['p']) {
+			$the_id = $wp_query->post->ID;
+
+            if ($id == $the_id) {
                 $this->increment_headline_clicks($id, $is_alt);
 
                 return $is_alt;
