@@ -26,11 +26,11 @@ License: GPL2
 */
 
 function addHeaderCode() {
-  echo "Brent";
+  return "Brent";
 }
 
-function addLinkCode() {
-  echo "Test-Test-Test";
+function addLinkCode($permalink) {
+  return "$permalink&myawesomevalue=1";
 }
 
 add_action('the_title', 'addHeaderCode', 1);
