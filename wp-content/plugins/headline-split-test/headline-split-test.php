@@ -28,7 +28,7 @@ License: GPL2
 class HEADST4WP {
 
 	var $meta = 'headst4wp';
-	var $titleMap = array();
+	var $title_map = array();
     
 	function HEADST4WP ($meta = 'headst4wp', $control_in_head = true) {
 		$this->__construct($meta, $control_in_head);
@@ -47,17 +47,17 @@ class HEADST4WP {
 			add_meta_box('headsplittest_section', 'Set Alternate Headline', array(&$this, 'meta_box_post'), 'post', 'normal', 'high');
 			add_action('save_post', array(&$this,'action_save_post'), 1, 2);
 		} else {
-			add_filter('the_title', array(&$this, 'addHeaderCode'), 1, 2);
-			add_filter('post_link', array(&$this, 'addLinkCode'), 1, 2);
+			add_filter('the_title', array(&$this, 'title_filter'), 1, 2);
+			add_filter('post_link', array(&$this, 'link_filter'), 1, 2);
 		}
 	}
 	
 	
-	function addHeaderCode($title, $id) {
-		$isAlt = $this->getIsAlt($id);
-		$newTitle = $title;
+	function title_filter($title, $id) {
+		$is_alt = $this->get_is_alt($id);
+		$new_title = $title;
 
-		if ($isAlt == true) {
+		if ($is_alt == true) {
 			$options = get_post_meta($id, $this->meta, true);
 
 			if (is_array($options)) {
@@ -66,21 +66,21 @@ class HEADST4WP {
 				$options['alt_headline'] = '';
 			}
 
-			if (strlen($options['alt_headline']) > 0) $newTitle = $options['alt_headline'];
+			if (strlen($options['alt_headline']) > 0) $new_title = $options['alt_headline'];
 		}
 		
-		return "$newTitle";
+		return "$new_title";
 	}
 	
 
-	function addLinkCode($permalink, $post) {
-		$isAlt = $this->getIsAlt($post->ID) == true? 1: 0;
+	function link_filter($permalink, $post) {
+		$is_alt = $this->get_is_alt($post->ID) == true? 1: 0;
 
-		return "$permalink&isalt=$isAlt";
+		return "$permalink&isalt=$is_alt";
 	}
 	
 
-	function getIsAlt($id) {
+	function get_is_alt($id) {
 		// if we are looking at a page, we need to
 		// return the value of the isalt get parameter
 		// if our caller is asking for the title
@@ -90,17 +90,17 @@ class HEADST4WP {
 				return $_GET['isalt'] == 1? true: false;
 		}
 
-		if (array_key_exists($id, $this->titleMap)) {
-			return $this->titleMap[$id];
+		if (array_key_exists($id, $this->title_map)) {
+			return $this->title_map[$id];
 		}
 
-		$isAlt = false;
+		$is_alt = false;
 		if (rand(1, 10) > 5) {
-			$isAlt = true;
+			$is_alt = true;
 		}
 
-		$this->titleMap[$id] = $isAlt;
-		return $isAlt;
+		$this->title_map[$id] = $is_alt;
+		return $is_alt;
 	}
 
 	
@@ -133,6 +133,6 @@ class HEADST4WP {
 	}
 }
     
-$headlinesplittest = new HEADST4WP();
+$headline_split_test = new HEADST4WP();
     
 ?>
