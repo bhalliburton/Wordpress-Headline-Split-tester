@@ -29,6 +29,15 @@ function getIsAlt($id)
 {
 	static $titleMap = array();
 	
+	// if we are looking at a page, we need to 
+	// return the value of the isalt get parameter
+	// if our caller is asking for the title
+	// of the current page
+	if (array_key_exists('isalt', $_GET)) {
+		if ($id == $_GET['p'])
+			return $_GET['isalt'] == 1? true: false;
+	}
+	
 	if (array_key_exists($id, $titleMap)) {
 		return $titleMap[$id];
 	}
@@ -49,11 +58,11 @@ function addHeaderCode($title, $id) {
 	if ($isAlt == true)
 		$newTitle = str_rot13($title);
 	
-	return "$newTitle ($title)[$id]";
+	return "$newTitle ($title) [$id]";
 }
 
 function addLinkCode($permalink, $post) {
-	$isAlt = getIsAlt($post->ID);
+	$isAlt = getIsAlt($post->ID) == true? 1: 0;
 	
   	return "$permalink&isalt=$isAlt";
 }
