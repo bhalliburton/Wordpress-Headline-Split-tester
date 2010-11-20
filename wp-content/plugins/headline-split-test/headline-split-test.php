@@ -148,6 +148,13 @@ class HEADST4WP {
 		} else {
 			$options = array();
 		}
+		
+		$default_impressions = (int) get_option('headline_split_impressions');
+		$impressions = isset($options['headline_impressions'])? (int) $options['headline_impressions']: 0;
+		
+		// if we already have a winner, stop
+		if ($impressions >= $default_impressions)
+			return;
 
 		$clicks++;
 		$options[$index] = $clicks;
@@ -176,6 +183,12 @@ class HEADST4WP {
 			$options = array();
 		}
 		
+		$default_impressions = (int) get_option('headline_split_impressions');
+		
+		// if we already have a winner, stop
+		if ($impressions >= $default_impressions)
+			return;
+		
 		$impressions++;
 		$options['headline_impressions'] = $impressions;
 		
@@ -187,6 +200,23 @@ class HEADST4WP {
 	
 	
 	function title_filter($title, $id) {
+		// check to see if we have a winner and act accordingly
+		$options = get_post_meta($id, $this->meta, true);
+		if (is_array($options)) {
+			$default_impressions = (int) get_option('headline_split_impressions');
+			$impressions = isset($options['headline_impressions'])? (int) $options['headline_impressions']: 0;
+			$pri_clicks = isset($options['pri_headline_clicks'])? (int) $options['pri_headline_clicks']: 0;
+			$alt_clicks = isset($options['alt_headline_clicks'])? (int) $options['alt_headline_clicks']: 0;
+			
+			if ($impressions >= $default_impressions) {
+				$alt_headline = $this->get_alt_headline($id);
+				if (strlen($alt_headline) > 0 && $alt_clicks > $pri_clicks )
+					return $alt_headline;
+				
+				return $title;
+			}
+		}
+		
 		$is_alt = $this->get_is_alt($id);
 		$new_title = $title;
 
@@ -203,6 +233,17 @@ class HEADST4WP {
 	
 
 	function link_filter($permalink, $post) {
+		// check to see if we have a winner and act accordingly
+		$options = get_post_meta($post->ID, $this->meta, true);
+		if (is_array($options)) {
+			$default_impressions = (int) get_option('headline_split_impressions');
+			$impressions = isset($options['headline_impressions'])? (int) $options['headline_impressions']: 0;
+			
+			if ($impressions >= $default_impressions) {
+				return $permalink;
+			}
+		}
+		
 		$is_alt = $this->get_is_alt($post->ID) == true? 1: 0;
 
 		return "$permalink&isalt=$is_alt";
@@ -263,6 +304,7 @@ class HEADST4WP {
 		$total_impressions = 0;
 		$pri_clicks = 0;
 		$alt_clicks = 0;
+		$default_impressions = get_option('headline_split_impressions');
 		
 		if (is_array($options))
 		{
@@ -276,7 +318,7 @@ class HEADST4WP {
 	<tr><td colspan=2><textarea rows="1" cols="40" name="alt_headline"
 		tabindex="5" id="alt_headline" style="width: 98%"><?php echo(htmlentities($alt_headline)); ?></textarea>
 	</td></tr>
-	<tr><td>Total Impressions: </td><td><?php echo(htmlentities($total_impressions)); ?></td></tr>
+	<tr><td>Total Impressions: </td><td><?php echo(htmlentities($total_impressions)); ?> out of <?=$default_impressions?></td></tr>
 	<tr><td>Primary Headline Clicks: </td><td><?php echo(htmlentities($pri_clicks)); ?></td></tr>
 	<tr><td>Alternate Headline Clicks: </td><td><?php echo(htmlentities($alt_clicks)); ?></td></tr>
 </table>
