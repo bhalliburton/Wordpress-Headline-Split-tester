@@ -51,8 +51,62 @@ class HEADST4WP {
 			add_filter('the_title', array(&$this, 'title_filter'), 1, 2);
 			add_filter('post_link', array(&$this, 'link_filter'), 1, 2);
 		}
+		register_activation_hook(__FILE__,'set_headline_split_options');
+    register_deactivation_hook(__FILE__,'unset_headline_split_options');
+    add_action('admin_menu',array(&$this,'modify_menu'));
 	}
 	
+	function set_headline_split_options() {
+	  add_option('headline_split_impressions','250','Number of impressions to show before deciding');
+	}
+	
+	function unset_headline_split_options() {
+	  delete_option('headline_split_impressions');
+	}	
+	
+	function update_headline_split_options() {
+	  $ok = false;
+	  
+	  if($_REQUEST['headline_split_impressions']) {
+	    update_option('headline_split_impressions',$_REQUEST['headline_split_impressions']);
+	    $ok = true;
+	  }
+	  
+	  if($ok) {
+	    ?><div id="message" class="updated fade">
+	      <p>New impression target saved.</p>
+	    </div><?php
+	  } else {
+	    ?><div id="message" class="error fade">
+	      <p>Failed to save new impression target.</p>
+	    </div><?php
+	  }
+	}
+	
+	function print_headline_split_form() {
+	  $default_impressions = get_option('headline_split_impressions');
+	  ?>
+	  <form method="post">
+	    <label for="headline_split_impressions">Number of Impressions to Show Before Deciding:
+	      <input type="text" name="headline_split_impressions" value="<?=$default_impressions?>" />
+	    </label>
+	  </form>
+	  <?php
+	}
+	
+	function admin_headline_split_options() {
+	  ?><div class="wrap"><h2>Headline Split Tester Options</h2><?php
+	  
+	  if($_REQUEST['submit']) {
+	    $this->update_headline_split_options();
+	  }
+	  $this->print_headline_split_form();
+	  
+	}
+	
+	function modify_menu() {
+	  add_options_page('Headline Split Tester','Headline Split Tester','manage_options',__FILE__,array(&$this,'admin_headline_split_options'));
+	}
 	
 	function get_alt_headline($id){
 		$options = get_post_meta($id, $this->meta, true);
