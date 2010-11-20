@@ -36,7 +36,8 @@ class HEADST4WP {
 	
 	
 	function __construct($meta = 'headst4wp', $control_in_head = true) {
-		$this->meta = $meta; $this->control_in_head = $control_in_head;
+		$this->meta = $meta;
+		$this->control_in_head = $control_in_head;
 		add_action('plugins_loaded', array(&$this, 'action_plugins_loaded'));
 	}
 	
@@ -53,23 +54,78 @@ class HEADST4WP {
 	}
 	
 	
+	function get_alt_headline($id){
+		$options = get_post_meta($id, $this->meta, true);
+
+		if (is_array($options)) {
+			$options['alt_headline'] = isset($options['alt_headline']) ? trim($options['alt_headline']) : '';
+		} else {
+			$options['alt_headline'] = '';
+		}
+		
+		return $options['alt_headline'];
+	}
+	
+	
+	function get_headline_clicks($id, $is_alt) {
+		$options = get_post_meta($id, $this->meta, true);
+		$index = 'pri_headline_clicks';
+		
+		if ($is_alt)
+			$index = 'alt_headline_clicks';
+			
+		return (int) isset($options[$index]) ? $options[$index] : 0;
+	}
+	
+	
+	function get_headline_impressions($id) {
+		$options = get_post_meta($id, $this->meta, true);
+		
+		return (int) isset($options['headline_impressions']) ? $options['headline_impressions'] : 0;
+	}
+	
+	
+	function increment_headline_clicks($id, $is_alt) {
+		$clicks = $this->get_headline_clicks($id, $is_alt);
+		$clicks++;
+		
+		$index = 'pri_headline_clicks';
+		if ($is_alt)
+			$index = 'alt_headline_clicks';
+			
+		$options = array();
+		$options[$index] = $clicks;
+		
+		if (!update_post_meta($id, $this->meta, $options))
+			add_post_meta($id, $this->meta, $options);
+	}
+	
+	
+	function increment_headline_impressions($id) {
+		$impressions = $this->get_headline_impressions($id);
+		$impressions++;
+		
+		$options = array();
+		$options['headline_impressions'] = $impressions;
+		
+		if (!update_post_meta($id, $this->meta, $options))
+			add_post_meta($id, $this->meta, $options);
+	}
+	
+	
 	function title_filter($title, $id) {
 		$is_alt = $this->get_is_alt($id);
 		$new_title = $title;
 
 		if ($is_alt == true) {
-			$options = get_post_meta($id, $this->meta, true);
+			$alt_headline = $this->get_alt_headline($id);
 
-			if (is_array($options)) {
-				$options['alt_headline'] = isset($options['alt_headline']) ? trim($options['alt_headline']) : '';
-			} else {
-				$options['alt_headline'] = '';
-			}
-
-			if (strlen($options['alt_headline']) > 0) $new_title = $options['alt_headline'];
+			if (strlen($alt_headline) > 0)
+				$new_title = $alt_headline;
 		}
 		
-		return "$new_title";
+		$this->increment_headline_impressions($id, $is_alt);
+		return $new_title;
 	}
 	
 
@@ -81,13 +137,25 @@ class HEADST4WP {
 	
 
 	function get_is_alt($id) {
+		// the first thing we do is check to see if an alternate title
+		// is defined -- if not, this doesn't apply to us, so we just
+		// bail
+		$alt_headline = $this->get_alt_headline($id);
+		if (strlen($alt_headline) == 0)
+			return false;
+		
 		// if we are looking at a page, we need to
 		// return the value of the isalt get parameter
 		// if our caller is asking for the title
 		// of the current page
 		if (array_key_exists('isalt', $_GET)) {
-			if ($id == $_GET['p'])
-				return $_GET['isalt'] == 1? true: false;
+			$is_alt = $_GET['isalt'] != 0? true: false;
+			
+			if ($id == $_GET['p']) {
+				$this->increment_headline_clicks($id, $is_alt);
+				
+				return $is_alt;
+			}
 		}
 
 		if (array_key_exists($id, $this->title_map)) {
@@ -115,19 +183,29 @@ class HEADST4WP {
 		}
 	}
 
+
 	function meta_box_post($post) {
 		$options = get_post_meta($post->ID, $this->meta, true);
-
-		if (is_array($options)) {
-			$options['alt_headline'] = isset($options['alt_headline']) ? trim($options['alt_headline']) : '';
-		} else {
-			$options['alt_headline'] = '';
+		$alt_headline = '';
+		$total_impressions = 0;
+		$pri_clicks = 0;
+		$alt_clicks = 0;
+		
+		if (is_array($options))
+		{
+			$alt_headline = isset($options['alt_headline'])? trim($options['alt_headline']): '';
+			$total_impressions = (int) (isset($options['headline_impressions'])? $options['headline_impressions']: 0 );
+			$pri_clicks = (int) (isset($options['pri_headline_clicks'])? $options['pri_headline_clicks']: 0);
+			$alt_clicks = (int) (isset($options['alt_headline_clicks'])? $options['alt_headline_clicks']: 0);
 		}
 ?>
 <table border="0" width="100%">
-	<tr><td><textarea rows="1" cols="40" name="alt_headline"
-		tabindex="5" id="alt_headline" style="width: 98%"><?php echo(htmlentities($options['alt_headline'])); ?></textarea>
+	<tr><td colspan=2><textarea rows="1" cols="40" name="alt_headline"
+		tabindex="5" id="alt_headline" style="width: 98%"><?php echo(htmlentities($alt_headline)); ?></textarea>
 	</td></tr>
+	<tr><td>Total Impressions: </td><td><?php echo(htmlentities($total_impressions)); ?></td></tr>
+	<tr><td>Primary Headline Clicks: </td><td><?php echo(htmlentities($pri_clicks)); ?></td></tr>
+	<tr><td>Alternate Headline Clicks: </td><td><?php echo(htmlentities($alt_clicks)); ?></td></tr>
 </table>
 <?php
 	}
