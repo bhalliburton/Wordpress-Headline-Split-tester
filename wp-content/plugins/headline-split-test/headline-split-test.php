@@ -1,11 +1,11 @@
 <?php
 /*
 Plugin Name: Headline Split Test
-Plugin URI: http://URI_Of_Page_Describing_Plugin_and_Updates
-Description: A brief description of the Plugin.
+Plugin URI: http://www.cogmap.com/blog/wordpress-headline-split-tester/
+Description: Headline Split Tester allows you to have two competing headlines for blog posts. They are randomly shown until one headline wins.
 Version: 0.1
 Author: Brent Halliburton & Peter Bessman
-Author URI: http://URI_Of_The_Plugin_Author
+Author URI: http://www.cogmap.com/blog/
 License: GPL2
 */
 
