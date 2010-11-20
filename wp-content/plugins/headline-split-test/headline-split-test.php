@@ -26,116 +26,113 @@ License: GPL2
 */
 
 class HEADST4WP {
-  
-  var $meta    = 'headst4wp';
-	
-  function HEADST4WP ($meta = 'headst4wp', $control_in_head = true) {
+
+	var $meta = 'headst4wp';
+	var $titleMap = array();
+    
+	function HEADST4WP ($meta = 'headst4wp', $control_in_head = true) {
 		$this->__construct($meta, $control_in_head);
 	}
 	
+	
 	function __construct($meta = 'headst4wp', $control_in_head = true) {
-		$this->meta = $meta;
-		$this->control_in_head = $control_in_head;
+		$this->meta = $meta; $this->control_in_head = $control_in_head;
 		add_action('plugins_loaded', array(&$this, 'action_plugins_loaded'));
 	}
+	
 
 	function action_plugins_loaded() {
-	  if (is_admin()) {
-      require_once(ABSPATH . 'wp-admin/includes/template.php'); // Needed for add_meta_box()
-      add_meta_box('headsplittest_section', 'Set Alternate Headline', array(&$this, 'meta_box_post'), 'post', 'normal', 'high');
-      add_action('save_post', array(&$this, 'action_save_post'), 1, 2);
-    } else {
-      add_filter('the_title', array(&$this, 'addHeaderCode'), 1, 2);
-      add_filter('post_link', array(&$this, 'addLinkCode'), 1, 2);
-    }
-  }
-  
-  function getIsAlt($id)
-  {
-    static $titleMap = array();
+		if (is_admin()) {
+			require_once(ABSPATH . 'wp-admin/includes/template.php'); // Needed for add_meta_box()
+			add_meta_box('headsplittest_section', 'Set Alternate Headline', array(&$this, 'meta_box_post'), 'post', 'normal', 'high');
+			add_action('save_post', array(&$this,'action_save_post'), 1, 2);
+		} else {
+			add_filter('the_title', array(&$this, 'addHeaderCode'), 1, 2);
+			add_filter('post_link', array(&$this, 'addLinkCode'), 1, 2);
+		}
+	}
+	
+	
+	function addHeaderCode($title, $id) {
+		$isAlt = $this->getIsAlt($id);
+		$newTitle = $title;
 
-    // if we are looking at a page, we need to 
-    // return the value of the isalt get parameter
-    // if our caller is asking for the title
-    // of the current page
-    if (array_key_exists('isalt', $_GET)) {
-      if ($id == $_GET['p'])
-        return $_GET['isalt'] == 1? true: false;
-    }
+		if ($isAlt == true) {
+			$options = get_post_meta($id, $this->meta, true);
 
-    if (array_key_exists($id, $titleMap)) {
-      return $titleMap[$id];
-    }
+			if (is_array($options)) {
+				$options['alt_headline'] = isset($options['alt_headline']) ? trim($options['alt_headline']) : '';
+			} else {
+				$options['alt_headline'] = '';
+			}
 
-    $isAlt = false;
-    if (rand(1, 10) > 5) {
-      $isAlt = true;
-    }
+			if (strlen($options['alt_headline']) > 0) $newTitle = $options['alt_headline'];
+		}
+		
+		return "$newTitle";
+	}
+	
 
-    $titleMap[$id] = $isAlt;
-    return $isAlt;
-  }
+	function addLinkCode($permalink, $post) {
+		$isAlt = $this->getIsAlt($post->ID) == true? 1: 0;
 
-  function addHeaderCode($title, $id) {
-    $isAlt = $this->getIsAlt($id);
-    $newTitle = $title;
+		return "$permalink&isalt=$isAlt";
+	}
+	
 
-    if ($isAlt == true) {
-      $options = get_post_meta($id, $this->meta, true);
+	function getIsAlt($id) {
+		// if we are looking at a page, we need to
+		// return the value of the isalt get parameter
+		// if our caller is asking for the title
+		// of the current page
+		if (array_key_exists('isalt', $_GET)) {
+			if ($id == $_GET['p'])
+				return $_GET['isalt'] == 1? true: false;
+		}
 
+		if (array_key_exists($id, $this->titleMap)) {
+			return $this->titleMap[$id];
+		}
 
-      if (is_array($options)) {
-        $options['alt_headline']    = isset($options['alt_headline'])    ? trim($options['alt_headline'])    : '';	
-      } else {
-        $options['alt_headline']    = '';		
-      }
+		$isAlt = false;
+		if (rand(1, 10) > 5) {
+			$isAlt = true;
+		}
 
-      if (strlen($options['alt_headline']) > 0)
-        $newTitle = $options['alt_headline'];
-    }
+		$this->titleMap[$id] = $isAlt;
+		return $isAlt;
+	}
 
-    return "$newTitle";
-  }
+	
+	function action_save_post($post_id, $post) { 
+		if ($post->post_type != 'revision') {
+			$options = array();
+			$options['alt_headline'] = isset($_POST['alt_headline']) ? trim($_POST['alt_headline']) : '';
+			
+			if (!update_post_meta($post->ID, $this->meta, $options)) {
+				add_post_meta($post->ID, $this->meta, $options);
+			} 
+		}
+	}
 
-  function addLinkCode($permalink, $post) {
-    $isAlt = getIsAlt($post->ID) == true? 1: 0;
+	function meta_box_post($post) {
+		$options = get_post_meta($post->ID, $this->meta, true);
 
-    return "$permalink&isalt=$isAlt";
-  }
-
-
-  function action_save_post($post_id, $post) {
-    if ($post->post_type != 'revision') {
-      $options = array();
-      $options['alt_headline']    = isset($_POST['alt_headline'])    ? trim($_POST['alt_headline'])    : '';
-      if (!update_post_meta($post->ID, $this->meta, $options)) {
-        add_post_meta($post->ID, $this->meta, $options); 
-      }
-    } 
-  }
-
-  function meta_box_post($post) {
-    $options = get_post_meta($post->ID, $this->meta, true);
-
-    if (is_array($options)) {
-      $options['alt_headline']    = isset($options['alt_headline'])    ? trim($options['alt_headline'])    : '';	
-    } else {
-      $options['alt_headline']    = '';		
-    }	
-
-
-    ?>
-    <table border="0" width="100%">
-      <tr>
-        <td><textarea rows="1" cols="40" name="alt_headline" tabindex="5" id="alt_headline" style="width: 98%"><?php echo(htmlentities($options['alt_headline'])); ?></textarea>
-        </td>
-      </tr>
-    </table>
-    <?php
-  }
-
+		if (is_array($options)) {
+			$options['alt_headline'] = isset($options['alt_headline']) ? trim($options['alt_headline']) : '';
+		} else {
+			$options['alt_headline'] = '';
+		}
+?>
+<table border="0" width="100%">
+	<tr><td><textarea rows="1" cols="40" name="alt_headline"
+		tabindex="5" id="alt_headline" style="width: 98%"><?php echo(htmlentities($options['alt_headline'])); ?></textarea>
+	</td></tr>
+</table>
+<?php
+	}
 }
-
+    
 $headlinesplittest = new HEADST4WP();
-
+    
 ?>
