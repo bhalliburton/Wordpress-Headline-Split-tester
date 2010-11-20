@@ -1,6 +1,6 @@
 <?php
 /*
-Plugin Name: Headline Split Test
+Plugin Name: Headline Split Tester
 Plugin URI: http://www.cogmap.com/blog/wordpress-headline-split-tester/
 Description: Headline Split Tester allows you to have two competing headlines for blog posts. They are randomly shown until one headline wins.
 Version: 0.1
