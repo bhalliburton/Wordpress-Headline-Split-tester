@@ -55,10 +55,21 @@ function addHeaderCode($title, $id) {
 	$isAlt = getIsAlt($id);
 	$newTitle = $title;
 	
-	if ($isAlt == true)
-		$newTitle = str_rot13($title);
+	if ($isAlt == true) {
+		$options = get_post_meta($id, 'headline-split-test', true);
+
+
+		if (is_array($options)) {
+			$options['alt_headline']    = isset($options['alt_headline'])    ? trim($options['alt_headline'])    : '';	
+		} else {
+			$options['alt_headline']    = '';		
+		}
+		
+		if (strlen($options['alt_headline']) > 0)
+			$newTitle = $options['alt_headline'];
+	}
 	
-	return "$newTitle ($title) [$id]";
+	return "$newTitle";
 }
 
 function addLinkCode($permalink, $post) {
@@ -69,7 +80,6 @@ function addLinkCode($permalink, $post) {
 
 
 function action_save_post($post_id, $post) {
-	global $post;
 	if ($post->post_type != 'revision') {
 		$options = array();
 		$options['alt_headline']    = isset($_POST['alt_headline'])    ? trim($_POST['alt_headline'])    : '';
@@ -79,9 +89,7 @@ function action_save_post($post_id, $post) {
 	} 
 }
 
-function meta_box_post() {
-
-	global $post;
+function meta_box_post($post) {
 	$options = get_post_meta($post->ID, 'headline-split-test', true);
 
 	if (is_array($options)) {
