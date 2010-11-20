@@ -25,48 +25,37 @@ License: GPL2
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-$title_a = "TITLE A";
-$title_b = "TITLE B";
-
-$title_selected = "unset";
-$title_selected_id = "unset";
-
-function setupTitle()
+function getIsAlt($id)
 {
-	global $title_a, $title_b, $title_selected, $title_selected_id;
+	static $titleMap = array();
 	
-	if (array_key_exists('titleid', $_GET)) {
-		$title_selected_id = $_GET['titleid'];
-	
-		if ($title_selected_id == 'a')
-			$title_selected = $title_a;
-		else
-			$title_selected = $title_b;
-	} else {
-		$randval = rand(1, 10);
-		if ($randval > 5) {
-			$title_selected = $title_a;
-			$title_selected_id = 'a';
-		} else {
-			$title_selected = $title_b;
-			$title_selected_id = 'b';
-		}
+	if (array_key_exists($id, $titleMap)) {
+		return $titleMap[$id];
 	}
+	
+	$isAlt = false;
+	if (rand(1, 10) > 5) {
+		$isAlt = true;
+	}
+	
+	$titleMap[$id] = $isAlt;
+	return $isAlt;
 }
 
 function addHeaderCode($title, $id) {
-	global $title_selected;
-	setupTitle();
+	$isAlt = getIsAlt($id);
+	$newTitle = $title;
 	
-	return $title_selected. " ($title)[$id]";
+	if ($isAlt == true)
+		$newTitle = str_rot13($title);
+	
+	return "$newTitle ($title)[$id]";
 }
 
 function addLinkCode($permalink, $post) {
-	global $title_selected_id;
-	$id = $post->ID;
-	setupTitle();
+	$isAlt = getIsAlt($post->ID);
 	
-  	return "$permalink&titleid=$title_selected_id&monkeys=$id";
+  	return "$permalink&isalt=$isAlt";
 }
 
 add_filter('the_title', 'addHeaderCode', 1, 2);
