@@ -67,6 +67,59 @@ function addLinkCode($permalink, $post) {
   	return "$permalink&isalt=$isAlt";
 }
 
-add_filter('the_title', 'addHeaderCode', 1, 2);
-add_filter('post_link', 'addLinkCode', 1, 2);
+
+function meta_box_post() {
+
+	global $post;
+	$options = get_post_meta($post->ID, $this->meta, true);
+
+	if (is_array($options)) {
+		$options['enabled']           = isset($options['enabled'])           ?  (bool)$options['enabled']          : false;	 
+		$options['control_script']    = isset($options['control_script'])    ? trim($options['control_script'])    : '';	
+		$options['tracking_script']	  = isset($options['tracking_script'])   ? trim($options['tracking_script'])   : '';
+		$options['conversion_script'] = isset($options['conversion_script']) ? trim($options['conversion_script']) : '';
+	} else {
+		$options['enabled'] = false;
+		$options['control_script']    = '';		
+		$options['tracking_script']	  = '';	
+		$options['conversion_script'] = '';
+	}	
+
+
+?>
+<table border="0" width="100%">
+  <tr>
+    <td><textarea rows="1" cols="40" name="control_script" tabindex="5" id="control_script" style="width: 98%"><?php echo(htmlentities($options['alt_headline'])); ?></textarea>
+    </td>
+  </tr>
+</table>
+<?php
+
+}
+
+
+function action_save_post($post_id, $post) {
+	if ($post->post_type != 'revision') {
+		$options = array();
+		$options['enabled']           = isset($_POST['enable_gwo']) && ($_POST['enable_gwo'] == '1');
+		$options['control_script']    = isset($_POST['control_script'])    ? trim($_POST['control_script'])    : '';
+		$options['tracking_script']   = isset($_POST['tracking_script'])   ? trim($_POST['tracking_script'])   : '';
+		$options['conversion_script'] = isset($_POST['conversion_script']) ? trim($_POST['conversion_script']) : '';
+		if (!update_post_meta($post->ID, $this->meta, $options)) {
+			add_post_meta($post->ID, $this->meta, $options); 
+		}
+	} 
+}
+
+
+if (is_admin()) {
+	require_once(ABSPATH . 'wp-admin/includes/template.php'); // Needed for add_meta_box()
+	add_meta_box('headsplittest_section', 'Set Alternate Headline', 'meta_box_post', 'post', 'normal', 'high');
+	add_action('save_post', 'action_save_post', 1, 2);
+} else {
+  add_filter('the_title', 'addHeaderCode', 1, 2);
+  add_filter('post_link', 'addLinkCode', 1, 2);
+}
+
+
 ?>
