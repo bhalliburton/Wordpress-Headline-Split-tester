@@ -42,7 +42,7 @@ class HEADST4WP {
         $this->meta = $meta;
         $this->control_in_head = $control_in_head;
         add_action('plugins_loaded', array(&$this, 'action_plugins_loaded'));
-		register_activation_hook(__FILE__, array(&$this, 'set_headline_split_options'));
+		    register_activation_hook(__FILE__, array(&$this, 'set_headline_split_options'));
         register_deactivation_hook(__FILE__, array(&$this, 'unset_headline_split_options'));
     }
 
@@ -59,6 +59,7 @@ class HEADST4WP {
         }
     }
 
+/* Wordpress Admin Settings Menu */
 
     function set_headline_split_options() {
         add_option('headline_split_impressions', '250', '', 'yes');
@@ -121,6 +122,8 @@ class HEADST4WP {
     function modify_menu() {
         add_options_page('Headline Split Tester', 'Headline Split Tester', 'manage_options', __FILE__, array(&$this, 'admin_headline_split_options'));
     }
+
+/* End Wordpress Admin Settings Menu */
 
 
     function get_alt_headline($id) {
@@ -272,9 +275,6 @@ class HEADST4WP {
         // return the value of the isalt get parameter
         // if our caller is asking for the title
         // of the current page
-		/*echo '<pre>';
-		var_dump($wp_query);
-		echo '</pre>';*/
         if (isset($_GET['isalt'])) {
             $is_alt = $_GET['isalt'] != 0 ? true : false;
 
@@ -300,6 +300,7 @@ class HEADST4WP {
         return $is_alt;
     }
 
+/* Add Alt Headline capture to Add New Post Page */
 
     function action_save_post($post_id, $post) {
         if ($post->post_type != 'revision') {
@@ -351,8 +352,11 @@ class HEADST4WP {
         <?php
 
     }
+    
+/* End Add Alt Headline capture to Add New Post Page */
+
 }
 
-$headline_split_test = new HEADST4WP();
+$headline_split_tester = new HEADST4WP();
 
 ?>
