@@ -63,11 +63,13 @@ class HEADST4WP {
 
     function set_headline_split_options() {
         add_option('headline_split_impressions', '250', '', 'yes');
+		add_option('always_alt_headline_on_full_post', false, '', 'yes');
     }
 
 
     function unset_headline_split_options() {
         delete_option('headline_split_impressions');
+		delete_option('always_alt_headline_on_full_post');
     }
 
 
@@ -210,8 +212,16 @@ class HEADST4WP {
     function title_filter($title, $id) {
         // check to see if we have a winner and act accordingly
         $options = get_post_meta($id, $this->meta, true);
+		$use_alt = true;
+		
         if (is_array($options)) {
-            $default_impressions = (int) get_option('headline_split_impressions');
+	
+			// always show the original title on full page view for posts if configured to do so
+			$use_alt = (bool) get_option('always_alt_headline_on_full_post');
+			if (isset($_GET['isalt']) && $use_alt == false)
+	        	return $title;
+	
+            $default_impressions = (int) get_option('headline_split_impressions');		
             $impressions = isset($options['headline_impressions']) ? (int) $options['headline_impressions'] : 0;
             $pri_clicks = isset($options['pri_headline_clicks']) ? (int) $options['pri_headline_clicks'] : 0;
             $alt_clicks = isset($options['alt_headline_clicks']) ? (int) $options['alt_headline_clicks'] : 0;
@@ -228,7 +238,7 @@ class HEADST4WP {
         $is_alt = $this->get_is_alt($id);
         $new_title = $title;
 
-        if ($is_alt == true) {
+        if ($is_alt == true && $use_alt == true) {
             $alt_headline = $this->get_alt_headline($id);
 
             if (strlen($alt_headline) > 0)
