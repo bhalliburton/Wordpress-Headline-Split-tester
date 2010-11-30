@@ -63,7 +63,7 @@ class HEADST4WP {
 
     function set_headline_split_options() {
         add_option('headline_split_impressions', '250', '', 'yes');
-		add_option('use_alt_headline_on_full_post', false, '', 'yes');
+		add_option('use_alt_headline_on_full_post', true, '', 'yes');
     }
 
 
