@@ -63,13 +63,13 @@ class HEADST4WP {
 
     function set_headline_split_options() {
         add_option('headline_split_impressions', '250', '', 'yes');
-		add_option('always_alt_headline_on_full_post', false, '', 'yes');
+		add_option('use_alt_headline_on_full_post', false, '', 'yes');
     }
 
 
     function unset_headline_split_options() {
         delete_option('headline_split_impressions');
-		delete_option('always_alt_headline_on_full_post');
+		delete_option('use_alt_headline_on_full_post');
     }
 
 
@@ -217,7 +217,7 @@ class HEADST4WP {
         if (is_array($options)) {
 	
 			// always show the original title on full page view for posts if configured to do so
-			$use_alt = (bool) get_option('always_alt_headline_on_full_post');
+			$use_alt = (bool) get_option('use_alt_headline_on_full_post');
 			if (isset($_GET['isalt']) && $use_alt == false)
 	        	return $title;
 	
