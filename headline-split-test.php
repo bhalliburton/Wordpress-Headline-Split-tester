@@ -42,7 +42,7 @@ class HEADST4WP {
         $this->meta = $meta;
         $this->control_in_head = $control_in_head;
         add_action('plugins_loaded', array(&$this, 'action_plugins_loaded'));
-		    register_activation_hook(__FILE__, array(&$this, 'set_headline_split_options'));
+		register_activation_hook(__FILE__, array(&$this, 'set_headline_split_options'));
         register_deactivation_hook(__FILE__, array(&$this, 'unset_headline_split_options'));
     }
 
@@ -81,16 +81,24 @@ class HEADST4WP {
             $ok = true;
         }
 
+		if (array_key_exists('enable_alt_headline', $_REQUEST)) {
+			update_option('use_alt_headline_on_full_post', true);
+			$ok = true;
+		} else {
+			update_option('use_alt_headline_on_full_post', false);
+			$ok = true;
+		}
+
         if ($ok) {
             ?>
             <div id="message" class="updated fade">
-                <p>New impression target saved.</p>
+                <p>New settings saved.</p>
             </div><?php
 
         } else {
             ?>
             <div id="message" class="error fade">
-                <p>Failed to save new impression target.</p>
+                <p>Failed to save new settings.</p>
             </div><?php
 
         }
@@ -99,11 +107,25 @@ class HEADST4WP {
 
     function print_headline_split_form() {
         $default_impressions = get_option('headline_split_impressions');
+		$enable_alt = get_option('use_alt_headline_on_full_post');
+
+		$enable_alt_checked = $enable_alt? "checked" : "";
         ?>
         <form method="post">
-            <label for="headline_split_impressions">Number of Impressions to Show Before Deciding:</label>
-            <input type="text" name="headline_split_impressions" value="<?=$default_impressions?>"/>
+			<p>
+            	<label for="headline_split_impressions">Number of Impressions to Show Before Deciding:</label>
+            	<input type="text" name="headline_split_impressions" value="<?=$default_impressions?>"/>
+			</p>
+			<p>
+				<label for="enable_alt_headline">Enable Alternate Headline on Full Post*:</label>
+				<input type="checkbox" name="enable_alt_headline" value="1" <?=$enable_alt_checked?>/>
+			</p>
             <input type="submit" name="submit" value="Submit"/>
+			<p>
+				<em>* Uncheck this option if you're having trouble using this plugin along with social
+				media plugins such as Topsy.  If you're unsure, just leave it checked.</em>
+			</p>
+			
         </form>
 <?php
 
@@ -210,15 +232,18 @@ class HEADST4WP {
 
 
     function title_filter($title, $id) {
+		global $wp_query;
+		
         // check to see if we have a winner and act accordingly
         $options = get_post_meta($id, $this->meta, true);
 		$use_alt = true;
+		
 		
         if (is_array($options)) {
 	
 			// always show the original title on full page view for posts if configured to do so
 			$use_alt = (bool) get_option('use_alt_headline_on_full_post');
-			if (isset($_GET['isalt']) && $use_alt == false)
+			if ($wp_query->post_count == 1 && $use_alt == false)
 	        	return $title;
 	
             $default_impressions = (int) get_option('headline_split_impressions');		
@@ -238,7 +263,7 @@ class HEADST4WP {
         $is_alt = $this->get_is_alt($id);
         $new_title = $title;
 
-        if ($is_alt == true && $use_alt == true) {
+        if ($is_alt == true) {
             $alt_headline = $this->get_alt_headline($id);
 
             if (strlen($alt_headline) > 0)
